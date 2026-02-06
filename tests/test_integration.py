@@ -19,11 +19,11 @@ pytestmark = pytest.mark.skipif(
 class TestRemoteExecution:
     """Integration tests for remote execution."""
 
-    def test_simple_json_function(self) -> None:
-        """Test basic JSON codec function."""
+    def test_simple_function(self) -> None:
+        """Test basic remote function execution."""
         from choppa import Choppa
 
-        choppa = Choppa.from_env("CHOPPA_TEST_CLUSTER_ID")
+        choppa = Choppa()
 
         @choppa.remote
         def add(a: int, b: int) -> int:
@@ -36,7 +36,7 @@ class TestRemoteExecution:
         """Test that session context manager works."""
         from choppa import Choppa
 
-        choppa = Choppa.from_env("CHOPPA_TEST_CLUSTER_ID")
+        choppa = Choppa()
 
         @choppa.remote
         def double(x: int) -> int:

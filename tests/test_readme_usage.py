@@ -12,7 +12,6 @@ def _has_cluster_id() -> bool:
     """Check if cluster_id is available from env or config."""
     if os.environ.get("CHOPPA_TEST_CLUSTER_ID") or os.environ.get("DATABRICKS_CLUSTER_ID"):
         return True
-    # Check databrickscfg
     config_path = Path.home() / ".databrickscfg"
     if config_path.exists():
         content = config_path.read_text()
@@ -39,6 +38,21 @@ class TestReadmeUsage:
         @dutch.remote
         def add(a: int, b: int) -> int:
             return a + b
+
+        result = add(1, 2)
+        assert result == 3
+
+    def test_basic_usage_example_next(self) -> None:
+        """Test the basic usage example from README.md Usage section."""
+        from choppa import Choppa
+
+        exponent = 10
+
+        dutch = Choppa()
+
+        @dutch.remote
+        def add(a: int, b: int) -> int:
+            return a+ exponent
 
         result = add(1, 2)
         assert result == 3
