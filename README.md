@@ -20,24 +20,27 @@ You don't want to do any of that. You want to write some code and run it. Like a
 pip install choppa
 ```
 
+
 ## Configuration
 
-Choppa needs to know what cluster to run stuff on. In-order of precedence, Choppa will use the cluster:
+Choppa will search and use the first cluster identifier it finds via:
 
-- set via the `cluster_id` parameter when you instanciate `Choppa`
-- whatever you put in the environment variable `DATABRICKS_CLUSTER_ID`
-- the value of `cluster_id` in `~/.databrickscfg`
-  - if the environment variable `DATABRICKS_CONFIG_PROFILE` is set, using that profile
-  - otherwise using the `DEFAULT` profile
+- `DATABRICKS_CLUSTER_ID` environment variable
+- If `DATABRICKS_CONFIG_PROFILE` environment variable is set then the `cluster_id` in `~/.databrickscfg` for that profile
+- The `cluster_id` defined in `~/.databrickscfg`'s `DEFAULT` profile
 
-## Usage
+You can also manually set the cluster whenever you want with 
 
 ```python
-from choppa import Choppa
+choppa.set_cluster(cluster_id="8675309")
+```
 
-dutch = Choppa()
+## Quickstart
 
-@dutch.remote
+```python
+import choppa
+
+@choppa.remote
 def add(a: int, b: int) -> int:
     return a + b
 
@@ -46,45 +49,60 @@ add(1, 2)  # 3
 
 Donezo. You can probably stop reading now because that covers 99% of the frustration of Databricks development with _just a freaking decorator_
 
-## Advanced Usage
+## Slowstart
+
 
 ### Scope
 
-Choppa only instantiates remote environments for contexts that are possible to scope without having to `inspect` frames or mess with function ASTs. Or, put another way: **Only functions and arguments are in-scope**.
+**Global variables** are handy but _don't work with Choppa_
+
+**Do this**
 
 ```python
-from choppa import Choppa
-
-EXPONENT = 10
-
-dutch = Choppa()
-
-# This version works but is pretty boring
-@dutch.remote
-def an_option(a: int, exponent: int) -> int:
+@choppa.remote
+def some_math(a: int, exponent: int) -> int:
     return a ** exponent
 
-# This one uses ONE WEIRD TRICK to always produce the exact same result!
-@dutch.remote
-def another_option(a: int) -> int:
+some_math(2, 10) # 1024
+```
+
+**_Don't do this_**
+
+```python
+EXPONENT = 10
+
+@choppa.remote
+def some_math(a: int) -> int:
     return a ** EXPONENT
+
+some_math(2)  # RemoteExecitionFailed: name 'EXPONENT' is not defined
 ```
 
 ### Context Managers
 
-There's not a ton of savings to be had but you can use a context manager to group remote calls together. This does **not** invalidate the stuff I said about variables not being in-scope. What you get is faster execution because the remote process is reused for multiple function calls.
+Normally each call to a `@choppa.remote` function uses its own execution context on your cluster. If that's confusing then just pretend I said 'process' instead, it's close enough. You can group work into a single process via a context manager
+
+**Do this**
 
 ```python
-from choppa import Choppa
-
-dutch = Choppa()
-
-@dutch.remote
+@choppa.remote 
 def some_math(a: int, b: int) -> int:
     return a + b
 
-with dutch.session():
-    x = [some_math(y, 1) for y in range(1_000)]
+# 1 context
+with choppa.session():
+    x = [some_math(y, 1) for y in range(1_000)] 
+```
+
+**Don't do this**
+
+```python
+@choppa.remote 
+def some_math(a: int, b: int) -> int:
+    return a + b
+
+# 1 bajillion contexts
+x = [some_math(y, 1) for y in range(1_000)] 
 ```
 
 ## Requirements
@@ -92,7 +110,6 @@ with dutch.session():
 - Python 3.10+
 - `databricks-sdk` >= 0.20.0
 - `cloudpickle` (for serializing arguments and results)
-- Authenticated workspace (env vars, profile, or Azure CLI)
 
 ## License
 
