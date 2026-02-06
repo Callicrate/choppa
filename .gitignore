@@ -91,3 +91,5 @@ Thumbs.db
 
 # Project specific
 imported.py
+
+.secrets
