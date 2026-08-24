@@ -2,23 +2,29 @@
 
 from __future__ import annotations
 
+import ast
 import textwrap
 
 from databricks.sdk.service import compute
 
 
 def _strip_leading_decorators(src: str) -> str:
-    """Remove leading decorators from function source."""
-    src = textwrap.dedent(src)
-    lines = src.splitlines()
+    """Return one function definition without its leading decorators."""
+    dedented = textwrap.dedent(src)
+    try:
+        module = ast.parse(dedented)
+    except SyntaxError as exc:
+        raise ValueError("Function source is not valid Python.") from exc
 
-    i = 0
-    while i < len(lines) and not lines[i].strip():
-        i += 1
-    while i < len(lines) and lines[i].lstrip().startswith("@"):
-        i += 1
+    functions = [node for node in module.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
+    if len(functions) != 1:
+        raise ValueError("Expected source containing exactly one function definition.")
 
-    return "\n".join(lines[i:]).rstrip() + "\n"
+    function = functions[0]
+    lines = dedented.splitlines()
+    source = "\n".join(lines[function.lineno - 1 :]).rstrip() + "\n"
+    compile("from __future__ import annotations\n" + source, "<choppa-function>", "exec")
+    return source
 
 
 def _extract_text(resp: compute.CommandStatusResponse) -> str:

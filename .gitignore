@@ -55,14 +55,12 @@ coverage.xml
 # Environments
 .env
 .venv
+.venv-*/
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
-
-# UV
-uv.lock
 
 # PEP 582
 __pypackages__/
@@ -93,3 +91,4 @@ Thumbs.db
 imported.py
 
 .secrets
+.codex-account

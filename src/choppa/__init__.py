@@ -6,21 +6,31 @@ Remote function execution for Databricks clusters via the Command Execution API.
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable
-from typing import TYPE_CHECKING, ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar, overload
 
 from choppa._version import __version__
-from choppa.choppa import Choppa, _read_cluster_id_from_env
+from choppa.choppa import Choppa
 from choppa.codegen import RemoteFunction
-from choppa.errors import RemoteError, RemoteExecutionFailed
+from choppa.errors import (
+    RemoteArgumentsTooLarge,
+    RemoteError,
+    RemoteExecutionFailed,
+    RemoteOutputTruncated,
+    RemoteProtocolError,
+    RemoteResultTooLarge,
+)
 from choppa.session import RemoteSession
 
 __all__ = [
     "Choppa",
+    "RemoteArgumentsTooLarge",
     "RemoteError",
     "RemoteExecutionFailed",
     "RemoteFunction",
+    "RemoteOutputTruncated",
+    "RemoteProtocolError",
+    "RemoteResultTooLarge",
     "RemoteSession",
     "__version__",
     "remote",
@@ -28,38 +38,26 @@ __all__ = [
     "set_cluster",
 ]
 
-if TYPE_CHECKING:
-    from choppa.session import RemoteSession as _RemoteSessionType
-
-logger = logging.getLogger(__name__)
-
 P = ParamSpec("P")
 R = TypeVar("R")
 
 _default_choppa: Choppa | None = None
 
 
-def _discover_cluster_id() -> str | None:
-    """Attempt to resolve a cluster ID at import time without raising."""
-    return _read_cluster_id_from_env()
-
-
-_discovered_cluster_id = _discover_cluster_id()
-
-if _discovered_cluster_id is None:
-    logger.warning(
-        "No Databricks cluster ID found. Set DATABRICKS_CLUSTER_ID, "
-        "configure a profile in ~/.databrickscfg, or call "
-        "choppa.set_cluster(cluster_id='...')"
-    )
-
-
 def _get_default() -> Choppa:
     """Lazily initialize the default Choppa instance."""
     global _default_choppa
     if _default_choppa is None:
-        _default_choppa = Choppa(cluster_id=_discovered_cluster_id)
+        _default_choppa = Choppa()
     return _default_choppa
+
+
+@overload
+def remote(fn: Callable[P, R], /) -> Callable[P, R]: ...
+
+
+@overload
+def remote(fn: None = None, /) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
 
 
 def remote(
@@ -82,7 +80,7 @@ def remote(
     return _get_default().remote(fn)
 
 
-def session() -> _RemoteSessionType:
+def session() -> RemoteSession:
     """
     Create a session for reusing execution context across multiple calls.
 
