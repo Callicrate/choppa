@@ -58,6 +58,7 @@ packages = ["src/choppa"]
 
 [tool.hatch.build.targets.sdist]
 include = [
+    "/.gitattributes",
     "/.github/workflows/ci.yml",
     "/.yamllint.yml",
     "/CONTRIBUTING.md",
