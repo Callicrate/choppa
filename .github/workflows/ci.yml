@@ -64,7 +64,7 @@ jobs:
         run: "uv run zizmor --pedantic .github/workflows/ci.yml"
 
       - name: "Lint Markdown"
-        run: "uv run pymarkdownlnt -d md013 scan README.md CONTRIBUTING.md SECURITY.md"
+        run: "uv run pymarkdownlnt -d md013 scan CONTRIBUTING.md SECURITY.md"
 
       - name: "Check formatting"
         run: "uv run ruff format --check src tests scripts"

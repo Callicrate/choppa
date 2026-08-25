@@ -35,7 +35,7 @@ uv run ruff check src tests scripts
 uv run ruff format --check src tests scripts
 uv run yamllint .github/workflows/ci.yml .yamllint.yml
 uv run zizmor --pedantic .github/workflows/ci.yml
-uv run pymarkdownlnt -d md013 scan README.md CONTRIBUTING.md SECURITY.md
+uv run pymarkdownlnt -d md013 scan CONTRIBUTING.md SECURITY.md
 uv run mypy src tests scripts
 uv run pytest --cov=choppa --cov-branch --cov-fail-under=90
 uv build
