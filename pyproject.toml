@@ -1,11 +1,11 @@
 [project]
 name = "choppa"
-version = "0.2.0"
-description = "Get to da cluster! Remote function execution for Databricks."
+dynamic = ["version"]
+description = "Run small Python functions on classic Databricks clusters from local code."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "callicrate" }]
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
 keywords = ["databricks", "remote", "execution", "cluster", "spark"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -19,16 +19,26 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
-dependencies = ["databricks-sdk>=0.20.0"]
+dependencies = [
+    "cloudpickle>=2.0.0,<4",
+    "databricks-sdk>=0.20.0,<1",
+]
 
 [project.optional-dependencies]
 pickle = ["cloudpickle>=2.0.0"]
 dev = [
-    "cloudpickle>=2.0.0",
+    "build>=1.2.0,<2",
+    "check-wheel-contents>=0.6.0,<1",
+    "mypy>=1.10.0,<2",
+    "packaging>=26.0,<27",
+    "pip-audit>=2.7.0,<3",
+    "pymarkdownlnt>=0.9.0,<1",
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "ruff>=0.4.0",
-    "mypy>=1.0.0",
+    "twine>=7.0.0,<8",
+    "yamllint>=1.35.0,<2",
+    "zizmor>=1.29.0,<2",
 ]
 
 [project.urls]
@@ -37,23 +47,45 @@ Repository = "https://github.com/callicrate/choppa.git"
 Issues = "https://github.com/callicrate/choppa/issues"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.26.0,<2"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/choppa/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/choppa"]
 
+[tool.hatch.build.targets.sdist]
+include = [
+    "/.gitattributes",
+    "/.github/workflows/ci.yml",
+    "/.yamllint.yml",
+    "/CONTRIBUTING.md",
+    "/LICENSE",
+    "/MANIFEST.in",
+    "/README.md",
+    "/SECURITY.md",
+    "/pyproject.toml",
+    "/scripts",
+    "/src",
+    "/tests",
+    "/uv.lock",
+]
+
 [tool.ruff]
 target-version = "py310"
 line-length = 120
-src = ["src", "tests"]
+src = ["src", "tests", "scripts"]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "C4", "UP", "S", "T20", "SIM", "RUF"]
-ignore = ["S301"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"]
+"tests/*" = ["S101", "S102"]
+
+[tool.ruff.format]
+line-ending = "lf"
 
 [tool.mypy]
 python_version = "3.10"
@@ -61,15 +93,28 @@ strict = true
 warn_return_any = true
 warn_unused_ignores = true
 
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = ["pytest", "pytest.*", "_pytest", "_pytest.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+markers = [
+    "integration: requires explicit opt-in and a disposable classic Databricks cluster",
+]
 
 [tool.coverage.run]
 source = ["src/choppa"]
 branch = true
 
 [tool.coverage.report]
+fail_under = 90
+show_missing = true
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",

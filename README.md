@@ -114,9 +114,3 @@ x = [some_math(y, 1) for y in range(1_000)]
 ## License
 
 MIT
-
----
-
-Hey, boss, I just made literally every researcher's job easier, made them more productive, made them happier. Everyone who works for you and a significant chunk of data science people across the BU. I'm just talking out loud here but maybe _now_ I can get that promotion?
-
-_(huh? what are 'people skills'...)_
